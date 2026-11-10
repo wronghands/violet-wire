@@ -13,7 +13,7 @@
 <body>
   <main>
     <header class="intro">
-      <span class="badge">v0.2.1 · Cihaz testi</span>
+      <span class="badge">v0.3.0 · İki renk deneyi</span>
       <h1>Violet Wire</h1>
       <p>Android Chrome için Bluetooth LED kontrolü</p>
     </header>
@@ -94,6 +94,40 @@
       <h3 id="favorites-title">Favoriler</h3>
       <p class="favorites-status" id="favorites-status" role="status">Favoriler bu tarayıcıda saklanır.</p>
       <ul class="favorites" id="favorites" aria-labelledby="favorites-title"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="split-title" id="split-lab">
+      <h2 id="split-title">İki renk laboratuvarı · Deneysel</h2>
+      <p>Kontrolcünün sabit iki bölge desteği henüz doğrulanmadı. İlk denememiz: tüm şeridi bir renk yapıp aktif piksel sayısını kısaltarak baş kısmı diğer renge çevirmek.</p>
+      <p><strong>Önemli:</strong> Orijinal PIXELS değerini önce MR Star uygulamasından öğren. Yanlış değer eski davranışı değiştirebilir. Cihazı açmıyoruz, firmware'e dokunmuyoruz.</p>
+      <div class="lab-counts">
+        <label for="original-count">Orijinal PIXELS sayısı (8–300)</label>
+        <input id="original-count" type="number" min="9" max="300" step="1" inputmode="numeric" placeholder="MR Star'daki gerçek sayı">
+        <label for="split-count">Test sınırı / aktif piksel (8–299)</label>
+        <input id="split-count" type="number" min="8" max="299" step="1" inputmode="numeric" placeholder="Örneğin orijinalin yarısı">
+      </div>
+      <label class="lab-confirm"><input type="checkbox" id="count-confirmed"> Orijinal PIXELS sayısını cihazın uygulamasından doğruladım.</label>
+      <div class="button-row">
+        <button type="button" id="store-count">Orijinal sayıyı kaydet</button>
+        <button type="button" id="restore-count" disabled>Orijinal sayıyı geri yükle</button>
+      </div>
+      <div class="lab-color-pair" role="group" aria-label="Deneme renkleri">
+        <label for="prefix-color">Ön bölüm HEX (renk A)</label>
+        <input id="prefix-color" type="text" value="#FF0000" maxlength="7" spellcheck="false" autocomplete="off">
+        <label for="tail-color">Arka bölüm HEX (renk B)</label>
+        <input id="tail-color" type="text" value="#0000FF" maxlength="7" spellcheck="false" autocomplete="off">
+      </div>
+      <p>Bu iki HEX kodunun yalnızca renk tonu ve doygunluğu gönderilir; LED'in parlaklığı tüm şerit için ortaktır. Denemeden önce mevcut parlaklığı normal bölümde ayarla.</p>
+      <div class="button-row">
+        <button type="button" id="try-split" class="accent" disabled>İki renk dene: A önde</button>
+        <button type="button" id="try-reversed" disabled>Ters sırayı dene: B önde</button>
+      </div>
+      <div class="button-row">
+        <button type="button" id="probe-length" disabled>Tek renk kısaltma testi</button>
+        <button type="button" id="restore-full" disabled>Tüm şeridi geri yükle + mavi</button>
+      </div>
+      <p id="lab-status" role="status" aria-live="polite">Önce orijinal PIXELS değerini doğrulayıp kaydet. Hiçbir uzunluk komutu kendiliğinden gönderilmez.</p>
+      <p id="lab-commands" class="lab-commands"></p>
     </section>
 
     <details class="card" id="diagnostics">
