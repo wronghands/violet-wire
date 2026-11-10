@@ -77,11 +77,3 @@ Benzer reklam adı ve GATT topolojisi bir başka 3 m Miracles Star cihazında da
 4. Tanılamadaki ham HEX alanı, gözlemlenmiş tek bir kısa çerçevenin kullanıcı tarafından elle yeniden gönderilmesi içindir. Uygulama sınırı 20 bayttır. Bilinen kırmızı çerçeveyle başlayın. Rastgele opcode taraması, otomatik denemeler, ayar veya güncelleme komutları ve firmware müdahalesi kapsam dışında.
 
 **Bölge doğrulama eşiği.** Gerçek şeritte aynı anda iki ayrı sabit renk görünmeli. Bir bölgenin rengi değişirken diğerinin rengi ve sınırı sabit kalmalı. Desen, komut yazımı durduktan sonra en az 30 saniye sabit kalmalı ve aynı dizinin yeniden uygulanması sonucu tekrarlamalı. Video ve ayıklanmış çerçeveler kullanıcı tarafından gözden geçirildikten sonra uygulama kapsamı yeniden değerlendirilebilir.
-
-## v0.3.0 SET_LENGTH hipotez testi
-
-**Upstream doğrulanmış komut formatı:** `BC 03 02 <count:u16 big endian> 55`, kaynak: [mr-star-ble format_length_command](https://github.com/mishamyrt/mr-star-ble/blob/main/mr_star_ble/commands.py). Paket 8–300 LED için uygulanmıştır. **Bu cihazda SET_LENGTH'in tepkisi veya ayarı kalıcı saklayıp saklamadığı doğrulanmadı.**
-
-Hipotez: tümü B rengi → aktif sayı N'ye düşür → baştaki N piksele A rengi → kuyruğun B durumunu koruması. Aynı işlemin A/B yer değiştirmiş hali ve tek renkli negatif kontrolü ayrı denenebilir. Bu bir **prefix length/latch deneyi**, bilinen iki zone API'si değil. BLE yazımları birer çerçeve halinde gönderilir. Başarılı yazım ≠ başarılı bölge gösterimi.
-
-Güvenlik: Orijinal PIXELS sayısı kullanıcı tarafından MR Star'dan doğrulanıp kaydedilmedikçe hiçbir uzunluk komutu denenmez. Her test sonunda orijinal sayı yeniden gönderilir. Kalıcı etki veya kontrolcü davranışı bilinmediği için otomatik tarama ve bilinmeyen opcode yoktur. Kasa ve firmware kapalıdır.
