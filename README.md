@@ -28,9 +28,3 @@ Node.js ile `npm test` komutunu çalıştır. Testler renk dönüşümünü, pak
 ## v0.2.1 — doğrudan renk seçici
 
 Android Chrome'un sekiz hazır renkli yerel seçim ekranı yerine **sayfa içinde HSV editörü** kullanılır: büyük doygunluk/ışıklılık alanına dokun ve sürükle; renk tonu kaydırıcısını kullan. Klavye ve erişilebilirlik için doygunluk/ışıklılık kaydırıcıları da bulunur. HEX, favoriler ve önizleme eşzamanlıdır. BLE komutları yalnızca **Rengi uygula** ile gönderilir. v0.2.0 gerçek LED üzerinde kullanıcı tarafından doğrulanmıştır; v0.2.1 editörünün mobil saha testi ayrıca gereklidir.
-
-## v0.3.0 — Two-Color Lab (deneysel)
-
-**İki bağımsız sabit renk firmware tarafından henüz doğrulanmış DEĞİL.** Yeni laboratuvar, belgelenmiş `SET_LENGTH` komutunun eski LED değerlerini kuyrukta bırakıp bırakmadığını sınar. İki renk için renk A ve renk B HEX alanları vardır; denemeler iki ayrı kısmi bölgeyi adreslemez ve başarı sözü vermez. 3 farklı sıra denenebilir: A önde, B önde, tek renk kısaltma kontrolü.
-
-**Ön şart:** MR Star'daki gerçek *PIXELS* sayısını öğrenip doğrula; 9–300 sınırındaki orijinal sayıyı sakla, yarısından küçük bir test değeri seç. Uzunluk komutu cihazın ayarını değiştirebilir; otomatik gönderilmez. **Orijinal uzunluğu geri yükle** düğmesi her zaman kaydedilmiş sayıyı kullanır. Gerekirse **Tüm şeridi geri yükle + mavi** ile tam başlangıç durumuna dön. Bağlantı koparsa aynı sayıyı yeniden bağlandıktan sonra restore et. Basit renk denemesi fiziksel LED üzerinde doğrulanana kadar deneysel kabul edilir.
