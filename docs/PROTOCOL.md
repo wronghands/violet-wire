@@ -65,8 +65,6 @@ Hazır renkler yalnız renk paketi gönderir. Manuel parlaklık ve tanılama ken
 
 ## İki sabit bölge araştırması
 
-Kullanıcının `SET_LENGTH=75` denemesinde ilk yaklaşık yarı seçilen renkte yandı, kalan yarı karanlık kaldı. Tam paket dizisi ve zamanlama kaydedilmedi. Ayrı test, uzunluk ayarına dokunmadan kaynaklarda belgelenen `0x003A` hazır efektini ve hız `0` değerini dener. [Donanım bulguları ve deney paketleri](STATIONARY_COLORS.md)
-
 **Durum: bilinmiyor.** İncelenen açık kaynak kodunda iki bölgenin başlangıç/bitiş adresini, ayrı renklerini veya piksel tamponunu yazan bir komut görülmedi. GlowBridge'in `06` çerçevesi bir efekt seçer. mr-star-ble'daki `03` ayarı şerit uzunluğunu temsil eder. `07` yönü, `08` ise o projenin desteklediği cihazlarda hızı ayarlar. Bunların varlığı iki bağımsız sabit bölgeye ilişkin kanıt sağlamaz. [GlowBridge protokol belgesi](https://github.com/ronnygeo/GlowBridge/blob/main/docs/PROTOCOL.md), [mr-star-ble komut listesi](https://github.com/mishamyrt/mr-star-ble/blob/main/mr_star_ble/const.py), [Findn entegrasyonunun özellikleri](https://github.com/hirotasoshu/ha-findn-led-ble#features)
 
 Benzer reklam adı ve GATT topolojisi bir başka 3 m Miracles Star cihazında da raporlanmış. Bu, taşıma için bağımsız bir karşılaştırma noktasıdır. Hedef 5 m ürünün firmware kimliği veya sabit bölge özelliği hakkında doğrudan bilgi vermez. [Tira-led GATT kaydı](https://github.com/Luiscrespo-bot/Tira-led/blob/main/knowledge_base.yaml)

@@ -21,20 +21,20 @@ The observed prefix and dark tail are consistent with a controller-wide length l
 
 The goal of this test is to see whether one built-in pattern can show simultaneous stationary colors. Red and green come from the published preset. The layout, actual colors and behavior at minimum speed depend on the target controller. The reviewed catalogues did not show a red/blue-only running-water preset.
 
-Use the [pinned HTTPS test](https://wronghands.github.io/violet-wire-tests/effect-58-v1/lab/). The [deployment mirror](https://github.com/wronghands/violet-wire-tests) keeps the page and its transport modules together under `effect-58-v1/`. Preserve that directory when publishing further experiments. The canonical source is `lab/` in `wronghands/violet-wire`. A rollback of the stable app does not remove the pinned test.
+Use the [pinned HTTPS test](https://wronghands.github.io/violet-wire-tests/effect-58-v2/lab/). The [deployment mirror](https://github.com/wronghands/violet-wire-tests) keeps the page and its transport modules together under `effect-58-v2/`. Preserve that directory when publishing further experiments. The canonical source is `lab/` in `wronghands/violet-wire`. A rollback of the stable app does not remove the pinned test.
 
 | Action | Separate write to `FFF3` | Evidence |
 | --- | --- | --- |
 | Try, first write | `BC 06 02 00 3A 55` | Built-in red/green running water, effect 58. |
 | Try, second write | `BC 08 01 00 55` | Published speed encoder accepts 0 as its minimum. Whether the firmware freezes, slows, ignores or interprets it differently is unknown. |
-| Restore solid red | `BC 04 06 00 00 03 E8 00 00 55` | Owner-verified global red packet. GlowBridge reports that a global color exits effect mode on compatible units. Prior color, effect and speed are not read back. |
+| Return to solid red | `BC 04 06 00 00 03 E8 00 00 55` | Owner-verified global red packet. GlowBridge reports that a global color exits effect mode on compatible units. Prior color, effect and speed are not read back. |
 
 The lab writes the two Try frames in order, once each. Connection and page load should send no light commands. Restore is a separate action and does not recover the exact previous settings. The browser reporting a write does not establish that the controller applied it. [Effect and speed encoding](https://github.com/mishamyrt/mr-star-ble/blob/main/mr_star_ble/commands.py#L38-L47) · [GlowBridge effect handling](https://github.com/ronnygeo/GlowBridge/blob/main/docs/PROTOCOL.md#L95-L120)
 
-1. Verify the full strip lights solid red in [v0.2.1](https://wronghands.github.io/violet-wire/). If only the prefix lights, record that baseline before running a comparison. Leave the count untouched. Disconnect v0.2.1 and close any MR Star, Elkotrol or nRF Connect connection to the strip.
-2. Open the pinned lab in Android Chrome. Tap **Bağlan**, select `GATT--DEMO` and tap **Dene** once. If the pattern is uncomfortable, tap **Tek renge dön** to send the solid-red command.
-3. Observe the entire strip for at least 30 seconds after the second write. Compare the same fixed points at 0, 10, 20 and 30 seconds. Record each region's color, movement or brightness pulsing, whether a region went dark, and the displayed write status or error in **Deney kaydı ve kaynak**. If it looks stationary, keep watching for another 30–90 seconds to catch slow motion. Video can show both ends against fixed reference points.
-4. Tap **Tek renge dön** and verify solid red. If disconnected, reconnect before restoring. Tap **Bağlantıyı kes** when finished. If you notice a changed effect speed later, choose your usual setting in the controller app. The previous speed is unknown to Violet Wire.
+1. Verify the full strip lights solid red in [v0.2.1](https://wronghands.github.io/violet-wire/). If only the prefix lights, report that baseline and leave the count untouched. Disconnect v0.2.1 and close any MR Star, Elkotrol or nRF Connect connection to the strip.
+2. Open the pinned lab in Android Chrome. Tap **Connect**, select `GATT--DEMO` and tap **Try** once. If the pattern is uncomfortable, tap **Return to solid red** to send the solid-red command.
+3. Observe the entire strip for at least 30 seconds after the second write. Compare the same fixed points at 0, 10, 20 and 30 seconds. Record each region's color, movement or brightness pulsing, and whether a region went dark. Open the log to see write status and exact bytes. If the pattern looks stationary, keep watching for another 30–90 seconds to catch slow motion. Video can show both ends against fixed reference points.
+4. Tap **Return to solid red** and verify solid red. If disconnected, reconnect before restoring. Tap **Disconnect** when finished. If you notice a changed effect speed later, choose your usual setting in the controller app. The previous speed is unknown to Violet Wire.
 
 Stationary test passes only if distinct physical colors appear simultaneously and their positions and appearance hold for at least 30 seconds with no further writes. Slow or alternating animation, a single color, and a colored prefix plus a dark tail do not meet that criterion. A stationary preset would establish a constrained renderer behavior. Independent addressing still requires evidence that changing one requested region leaves the other unchanged.
 

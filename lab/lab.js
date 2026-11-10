@@ -11,7 +11,7 @@ const result = byId('result');
 const log = byId('log');
 const supported = window.isSecureContext && Boolean(navigator.bluetooth);
 const lab = new EffectLab(navigator.bluetooth, showEvent);
-const time = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 function addLog(label, bytes) {
   const entry = document.createElement('li');
@@ -23,27 +23,27 @@ function addLog(label, bytes) {
 }
 
 function showConnection(event) {
-  if (event.phase === 'choosing') connectionStatus.textContent = 'Cihaz listesinden GATT--DEMO’yu seç.';
-  if (event.phase === 'connecting') connectionStatus.textContent = 'Bağlanıyor…';
-  if (event.phase === 'ready') connectionStatus.textContent = 'Bağlı.';
+  if (event.phase === 'choosing') connectionStatus.textContent = 'Select GATT--DEMO from the device list.';
+  if (event.phase === 'connecting') connectionStatus.textContent = 'Connecting…';
+  if (event.phase === 'ready') connectionStatus.textContent = 'Connected.';
   if (event.phase !== 'idle') return;
-  if (event.reason === 'manual') connectionStatus.textContent = 'Bağlantı kesildi.';
-  if (event.reason === 'lost') connectionStatus.textContent = 'Bağlantı koptu. Yeniden bağlanabilirsin.';
+  if (event.reason === 'manual') connectionStatus.textContent = 'Disconnected.';
+  if (event.reason === 'lost') connectionStatus.textContent = 'Connection lost. You can reconnect.';
   if (event.reason === 'error') {
     connectionStatus.textContent = event.error?.name === 'NotFoundError' && event.stage === 'chooser'
-      ? 'Cihaz seçilmedi. Tekrar bağlanabilirsin.'
-      : 'Bağlanılamadı. Bluetooth’u kontrol et ve diğer uygulamaların şeritle bağlantısını kes.';
+      ? 'No device selected. You can try again.'
+      : 'Could not connect. Check Bluetooth and disconnect other apps from the strip.';
   }
 }
 
 function showRun(event) {
   const messages = {
-    sending: event.mode === 'try' ? 'Efekt ve en düşük hız yazılıyor…' : 'Kırmızı komutu yazılıyor…',
-    observing: 'Tarayıcı yazımları tamamladı. Şeridi şimdi 30 saniye izle. Renkler yer değiştiriyor mu?',
-    elapsed: '30 saniye doldu. Aynı yerlerde kalan iki farklı renk gördün mü? Fiziksel sonucu kaydet.',
-    restored: 'Tarayıcı kırmızı komutunu yazdı. Şeridin tamamının kırmızı olduğunu kontrol et.',
-    failed: `Yazım tamamlanamadı. ${event.completed} paket tarayıcıda tamamlandı. Şeridi kontrol et veya tek renge dön.`,
-    interrupted: 'Bağlantı kesildi. Deney durdu. Şeridi kontrol et. Gerekirse yeniden bağlanıp tek renge dön.',
+    sending: event.mode === 'try' ? 'Sending the effect and lowest speed…' : 'Sending the solid red command…',
+    observing: 'The browser completed both writes. Watch the strip now for 30 seconds. Do the colors move?',
+    elapsed: '30 seconds have passed. Did two colors stay in the same places? Record what you saw.',
+    restored: 'The browser completed the red write. Check whether the whole strip is red.',
+    failed: `The browser completed ${event.completed} of the requested writes. Check the strip or return to solid red.`,
+    interrupted: 'The experiment stopped when Bluetooth disconnected. Check the strip. Reconnect if you need to return to solid red.',
   };
   result.textContent = messages[event.state];
 }
@@ -63,16 +63,16 @@ function updateControls() {
 function showEvent(event) {
   if (event.type === 'phase') {
     showConnection(event);
-    if (event.phase === 'writing') addLog('FFF3 yazım denemesi', event.bytes);
+    if (event.phase === 'writing') addLog('FFF3 write attempted', event.bytes);
   }
-  if (event.type === 'write') addLog(event.error ? 'FFF3 yazım hatası' : 'FFF3 yazımı tarayıcıda tamamlandı', event.bytes);
+  if (event.type === 'write') addLog(event.error ? 'FFF3 write failed' : 'Browser completed FFF3 write', event.bytes);
   if (event.type === 'run') showRun(event);
   updateControls();
 }
 
 connectionStatus.textContent = supported
-  ? 'Bağlı değil.'
-  : 'Web Bluetooth kullanılamıyor. Bu HTTPS adresini Android Chrome’da doğrudan aç.';
+  ? 'Disconnected.'
+  : 'Web Bluetooth unavailable. Open this HTTPS page directly in Android Chrome.';
 updateControls();
 connect.addEventListener('click', () => lab.connect());
 disconnect.addEventListener('click', () => lab.disconnect());
