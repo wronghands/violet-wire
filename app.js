@@ -1,5 +1,6 @@
 import { VioletBluetooth } from './ble.js';
-import { brightnessFrame, colorFrame, formatHex, parseRawFrame, powerFrame } from './protocol.js';
+import { createFavorites, MAX_FAVORITES } from './favorites.js';
+import { brightnessFrame, colorFrame, customColorFrames, formatHex, normalizeRgbHex, parseRawFrame, powerFrame, rgbHexToHsv } from './protocol.js';
 
 const byId = (id) => document.getElementById(id);
 const connect = byId('connect');
@@ -10,6 +11,17 @@ const channel = byId('channel');
 const commands = byId('commands');
 const brightness = byId('brightness');
 const brightnessValue = byId('brightness-value');
+const colorPicker = byId('color-picker');
+const colorHex = byId('color-hex');
+const colorError = byId('color-error');
+const colorSwatch = byId('color-swatch');
+const colorTarget = byId('color-target');
+const colorLevel = byId('color-level');
+const colorStatus = byId('color-status');
+const applyColor = byId('apply-color');
+const addFavorite = byId('add-favorite');
+const favoritesStatus = byId('favorites-status');
+const favoritesList = byId('favorites');
 const raw = byId('raw');
 const preview = byId('raw-preview');
 const sendRaw = byId('send-raw');
@@ -18,6 +30,10 @@ const defaultChannel = channel.textContent;
 const defaultActivity = activity.textContent;
 const supported = window.isSecureContext && Boolean(navigator.bluetooth);
 const bluetooth = new VioletBluetooth(navigator.bluetooth, showEvent);
+const favorites = createFavorites(() => window.localStorage);
+const percent = new Intl.NumberFormat('tr-TR', { style: 'percent', maximumFractionDigits: 1 });
+let customDraft = null;
+let pendingColor = null;
 
 function connectionError(error, stage) {
   if (stage === 'chooser') {
@@ -39,15 +55,93 @@ function addLog(message) {
   if (log.children.length > 24) log.lastElementChild.remove();
 }
 
+function setBrightness(level) {
+  brightness.value = level;
+  brightnessValue.value = percent.format(level / 1000);
+  brightness.setAttribute('aria-valuetext', brightnessValue.value);
+}
+
+function updateColorButtons() {
+  applyColor.disabled = !customDraft || bluetooth.phase !== 'ready';
+  addFavorite.disabled = !customDraft || favorites.has(customDraft) || favorites.colors.length >= MAX_FAVORITES;
+}
+
+function updateCustomDraft() {
+  customDraft = normalizeRgbHex(colorHex.value);
+  colorHex.setAttribute('aria-invalid', String(!customDraft));
+  colorError.textContent = customDraft ? '' : '# işaretini ve ardından altı HEX karakteri gir. Örnek #7C3AED.';
+  if (customDraft) {
+    colorPicker.value = customDraft.toLowerCase();
+    colorSwatch.style.setProperty('--swatch', customDraft);
+    colorTarget.textContent = customDraft;
+    colorLevel.textContent = `Hedef parlaklık ${percent.format(rgbHexToHsv(customDraft).value / 1000)}`;
+  } else {
+    colorSwatch.style.removeProperty('--swatch');
+    colorTarget.textContent = 'Geçersiz renk';
+    colorLevel.textContent = 'Önizleme yok';
+  }
+  updateColorButtons();
+  for (const button of favoritesList.querySelectorAll('[data-favorite]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.favorite === customDraft));
+  }
+}
+
+function stageColor(color) {
+  colorHex.value = color.toUpperCase();
+  updateCustomDraft();
+}
+
+function renderFavorites() {
+  const items = favorites.colors.map((color) => {
+    const item = document.createElement('li');
+    const select = document.createElement('button');
+    const swatch = document.createElement('span');
+    const remove = document.createElement('button');
+    select.type = remove.type = 'button';
+    select.className = 'favorite-select';
+    select.dataset.favorite = color;
+    select.setAttribute('aria-pressed', String(color === customDraft));
+    swatch.setAttribute('aria-hidden', 'true');
+    swatch.style.setProperty('--swatch', color);
+    select.append(swatch, color);
+    select.addEventListener('click', () => stageColor(color));
+    remove.textContent = 'Sil';
+    remove.setAttribute('aria-label', `${color} favorisini sil`);
+    remove.addEventListener('click', () => {
+      const index = favorites.colors.indexOf(color);
+      const result = favorites.remove(color);
+      renderFavorites();
+      const nextItem = favoritesList.children[index] ?? favoritesList.lastElementChild;
+      (nextItem?.querySelector('button') ?? (addFavorite.disabled ? colorHex : addFavorite)).focus();
+      favoritesStatus.textContent = result === 'stored' ? `${color} favorilerden silindi.` : `${color} bu sayfa oturumunda favorilerden silindi.`;
+    });
+    item.append(select, remove);
+    return item;
+  });
+  favoritesList.replaceChildren(...items);
+  updateColorButtons();
+}
+
 function showEvent(event) {
   if (event.type === 'notify') {
     addLog(`FFF4 bildirim · ${formatHex(event.bytes)}`);
     return;
   }
   if (event.type === 'write') {
+    addLog(`${event.error ? 'Yazma hatası' : 'FFF3 yazıldı'} · ${formatHex(event.bytes)}`);
+    if (event.total === 2) {
+      if (!event.error && event.index === 0) return;
+      const { hex, value } = pendingColor;
+      let result = `Tarayıcı ${hex} için renk ve parlaklık yazımını tamamladı. LED’i gözle kontrol et.`;
+      if (!event.error) setBrightness(value);
+      else if (event.index === 0) result = `${hex} yazılamadı. Parlaklık paketi gönderilmedi.`;
+      else result = `${hex} için renk yazımı tamamlandı. Parlaklık yazılamadı.`;
+      pendingColor = null;
+      colorStatus.textContent = result;
+      return;
+    }
     const result = event.error ? 'Yazma başarısız. Bağlantıyı kontrol edip tekrar dene.' : 'Tarayıcı yazmayı tamamladı. LED tepkisini gözle kontrol et.';
     activity.textContent = result;
-    addLog(`${event.error ? 'Yazma hatası' : 'FFF3 yazıldı'} · ${formatHex(event.bytes)}`);
     return;
   }
 
@@ -57,8 +151,11 @@ function showEvent(event) {
   disconnect.disabled = !connected;
   commands.disabled = phase !== 'ready';
   updateRaw();
+  updateColorButtons();
 
   if (phase === 'idle') {
+    colorStatus.textContent = pendingColor ? `${pendingColor.hex} işlemi bağlantı kesilince durdu. Şeridin durumunu kontrol et.` : '';
+    pendingColor = null;
     const messages = { manual: 'Bağlantı kesildi.', lost: 'Bluetooth bağlantısı koptu. Tekrar bağlanabilirsin.' };
     connection.textContent = event.reason === 'error' ? connectionError(event.error, event.stage) : messages[event.reason];
     activity.textContent = defaultActivity;
@@ -73,7 +170,7 @@ function showEvent(event) {
     connection.textContent = 'GATT--DEMO bağlı.';
     const writeMode = event.mode === 'without-response' ? 'WRITE_NO_RESPONSE' : 'WRITE';
     channel.textContent = `FFF3 ${writeMode} · FFF4 bildirim ${event.notifications ? 'etkin' : 'kullanılamıyor'}`;
-  } else if (phase === 'writing') {
+  } else if (phase === 'writing' && event.total === 1) {
     activity.textContent = `Gönderiliyor · ${formatHex(event.bytes)}`;
   }
 }
@@ -101,12 +198,33 @@ for (const button of commands.querySelectorAll('[data-power]')) {
 for (const button of commands.querySelectorAll('[data-color]')) {
   button.addEventListener('click', () => bluetooth.send(colorFrame(button.dataset.color)));
 }
-brightness.addEventListener('input', () => {
-  const percent = Number(brightness.value) / 10;
-  brightnessValue.value = `${percent}%`;
-  brightness.setAttribute('aria-valuetext', `Yüzde ${percent}`);
-});
+brightness.addEventListener('input', () => setBrightness(Number(brightness.value)));
 byId('apply-brightness').addEventListener('click', () => bluetooth.send(brightnessFrame(Number(brightness.value))));
+
+colorHex.addEventListener('input', updateCustomDraft);
+colorHex.addEventListener('blur', () => {
+  if (customDraft) colorHex.value = customDraft;
+});
+for (const eventName of ['input', 'change']) {
+  colorPicker.addEventListener(eventName, () => stageColor(colorPicker.value));
+}
+applyColor.addEventListener('click', () => {
+  if (!customDraft || bluetooth.phase !== 'ready') return;
+  const { color, brightness: levelFrame, value } = customColorFrames(customDraft);
+  pendingColor = { hex: customDraft, value };
+  colorStatus.textContent = `${customDraft} için renk ve parlaklık yazılıyor…`;
+  bluetooth.sendSequence([color, levelFrame]);
+});
+addFavorite.addEventListener('click', () => {
+  const result = favorites.add(customDraft);
+  if (result === 'unchanged') return;
+  renderFavorites();
+  favoritesList.querySelector(`[data-favorite="${customDraft}"]`).focus();
+  favoritesStatus.textContent = result === 'stored' ? `${customDraft} favorilere eklendi.` : `${customDraft} bu sayfa oturumunda favorilere eklendi.`;
+  if (favorites.colors.length === MAX_FAVORITES) favoritesStatus.textContent += ` ${MAX_FAVORITES} favori sınırına ulaştın.`;
+});
+updateCustomDraft();
+renderFavorites();
 
 raw.addEventListener('input', updateRaw);
 sendRaw.addEventListener('click', () => {

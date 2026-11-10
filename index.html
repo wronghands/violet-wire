@@ -13,7 +13,7 @@
 <body>
   <main>
     <header class="intro">
-      <span class="badge">v0.1.0 · Cihaz testi</span>
+      <span class="badge">v0.2.0 · Cihaz testi</span>
       <h1>Violet Wire</h1>
       <p>Android Chrome için Bluetooth LED kontrolü</p>
     </header>
@@ -50,19 +50,46 @@
         </div>
         <div class="brightness">
           <label for="brightness">Parlaklık</label>
-          <output id="brightness-value" for="brightness">50%</output>
-          <input id="brightness" type="range" min="0" max="1000" step="10" value="500" aria-valuetext="Yüzde 50">
+          <output id="brightness-value" for="brightness">%50</output>
+          <input id="brightness" type="range" min="0" max="1000" step="1" value="500" aria-valuetext="%50">
           <button id="apply-brightness" type="button">Uygula</button>
         </div>
       </fieldset>
       <p class="activity" id="activity" role="status">LED tepkisini gözle kontrol et. Burada tarayıcının yazma sonucu görünür.</p>
     </section>
 
+    <section class="card" aria-labelledby="custom-title">
+      <h2 id="custom-title">Özel renk</h2>
+      <p id="color-help"><code>#RRGGBB</code> hedef RGB değeridir. Şeridin ürettiği renk ve parlaklık farklı görünebilir.</p>
+      <div class="color-fields">
+        <label for="color-picker">Renk seçici</label>
+        <label for="color-hex">HEX değeri</label>
+        <input id="color-picker" type="color" value="#7c3aed">
+        <input id="color-hex" type="text" value="#7C3AED" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="color-help color-error">
+      </div>
+      <p class="input-error" id="color-error" aria-live="polite"></p>
+      <div class="color-preview">
+        <span id="color-swatch" aria-hidden="true"></span>
+        <div>
+          <strong id="color-target">#7C3AED</strong>
+          <p id="color-level">Önizleme</p>
+        </div>
+      </div>
+      <div class="button-row color-actions">
+        <button class="accent" id="apply-color" type="button" disabled>Rengi uygula</button>
+        <button id="add-favorite" type="button" disabled>Favoriye ekle</button>
+      </div>
+      <p class="color-status" id="color-status" role="status"></p>
+      <h3 id="favorites-title">Favoriler</h3>
+      <p class="favorites-status" id="favorites-status" role="status">Favoriler bu tarayıcıda saklanır.</p>
+      <ul class="favorites" id="favorites" aria-labelledby="favorites-title"></ul>
+    </section>
+
     <details class="card" id="diagnostics">
       <summary>Tanılama</summary>
       <p id="channel">Yazma ve bildirim kanalları bağlantı sırasında kontrol edilir.</p>
-      <label for="raw">Deneysel HEX gönderimi</label>
-      <p id="raw-help">Yalnızca inceleyip tekrar göndermek istediğin tek bir <code>BC … 55</code> çerçevesi gir. En fazla 20 bayt.</p>
+      <label for="raw">Ham BLE çerçevesi (HEX)</label>
+      <p id="raw-help">Tanılama için inceleyip tekrar göndermek istediğin tek bir <code>BC … 55</code> çerçevesi gir. En fazla 20 bayt.</p>
       <textarea id="raw" rows="2" maxlength="100" spellcheck="false" autocapitalize="characters" autocomplete="off" aria-describedby="raw-help raw-preview" placeholder="BC 04 06 00 00 03 E8 00 00 55"></textarea>
       <p id="raw-preview"></p>
       <button id="send-raw" type="button" disabled>HEX’i onayla ve gönder</button>

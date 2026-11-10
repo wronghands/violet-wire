@@ -13,6 +13,10 @@ export class VioletBluetooth {
     this.publish({ type: 'phase', phase, ...detail });
   }
 
+  setReady(session) {
+    this.setPhase('ready', { notifications: session.notifications, mode: session.mode });
+  }
+
   async connect() {
     if (this.phase !== 'idle') return;
     this.setPhase('choosing');
@@ -69,7 +73,7 @@ export class VioletBluetooth {
         session.notify?.removeEventListener('characteristicvaluechanged', session.onNotify);
         session.notifications = false;
       }
-      this.setPhase('ready', { notifications: session.notifications, mode: session.mode });
+      this.setReady(session);
     } catch (error) {
       if (session && this.session !== session) return;
       this.clear('error', { error, stage: session?.stage ?? 'chooser' });
@@ -99,17 +103,35 @@ export class VioletBluetooth {
   }
 
   async send(bytes) {
+    await this.sendSequence([bytes]);
+  }
+
+  async sendSequence(frames) {
     const session = this.session;
-    if (this.phase !== 'ready' || !this.isCurrent(session)) return;
-    this.setPhase('writing', { bytes });
+    const total = frames.length;
+    if (!total || this.phase !== 'ready' || !this.isCurrent(session)) return;
+    let completed = 0;
     let error;
-    try {
-      await session.write(bytes);
-    } catch (writeError) {
-      error = writeError;
+    for (const [index, bytes] of frames.entries()) {
+      this.setPhase('writing', { bytes, total });
+      if (!this.isCurrent(session)) return;
+      try {
+        await session.write(bytes);
+        completed++;
+      } catch (writeError) {
+        error = writeError || new Error('Write failed');
+      }
+      if (!this.isCurrent(session)) return;
+      if (total === 1) {
+        this.setReady(session);
+        if (!this.isCurrent(session)) return;
+      }
+      const event = { type: 'write', bytes, error };
+      this.publish(total === 1 ? event : { ...event, index, total });
+      if (!this.isCurrent(session)) return;
+      if (error) break;
     }
-    if (!this.isCurrent(session)) return;
-    this.setPhase('ready', { notifications: session.notifications, mode: session.mode });
-    this.publish({ type: 'write', bytes, error });
+    if (total > 1) this.setReady(session);
+    return error ? { completed, error } : { completed };
   }
 }
