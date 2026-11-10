@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { VioletBluetooth } from '../ble.js';
-import { colorFrame, powerFrame } from '../protocol.js';
+import { colorFrame, customColorFrames, powerFrame } from '../protocol.js';
 
 function fixture({ mode = 'without-response', notify = true, requestError, serviceError, write } = {}) {
   const events = [];
@@ -135,4 +135,82 @@ test('a rejected write is reported and controls recover if still connected', asy
   await controller.send(bytes);
   assert.equal(controller.phase, 'ready');
   assert.deepEqual(events.at(-1), { type: 'write', bytes, error });
+});
+
+function pendingWriteFixture() {
+  const finish = [];
+  const result = fixture({ write: () => new Promise((resolve) => finish.push(resolve)) });
+  return { ...result, finish };
+}
+
+test('custom color and brightness are separate ordered writes with a continuous busy phase', async () => {
+  const { controller, events, writes, finish } = pendingWriteFixture();
+  const { color, brightness } = customColorFrames('#804020');
+  assert.equal(await controller.sendSequence([color, brightness]), undefined);
+  assert.equal(writes.length, 0);
+
+  await controller.connect();
+  events.length = 0;
+  const pending = controller.sendSequence([color, brightness]);
+  assert.equal(controller.phase, 'writing');
+  assert.deepEqual(writes.map(({ bytes }) => bytes), [color]);
+  await controller.send(powerFrame(false));
+  assert.equal(await controller.sendSequence([color, brightness]), undefined);
+  assert.equal(writes.length, 1);
+
+  finish[0]();
+  await new Promise(setImmediate);
+  assert.equal(controller.phase, 'writing');
+  assert.deepEqual(writes.map(({ bytes }) => bytes), [color, brightness]);
+  assert.equal(events.some(({ phase }) => phase === 'ready'), false);
+
+  finish[1]();
+  assert.deepEqual(await pending, { completed: 2 });
+  assert.deepEqual(events.filter(({ type }) => type === 'write'), [
+    { type: 'write', bytes: color, index: 0, total: 2, error: undefined },
+    { type: 'write', bytes: brightness, index: 1, total: 2, error: undefined },
+  ]);
+  assert.equal(events.at(-1).phase, 'ready');
+});
+
+test('a failed custom write stops the sequence and reports how many writes completed', async () => {
+  const { color, brightness } = customColorFrames('#804020');
+  const frames = [color, brightness];
+  for (const failureIndex of [0, 1]) {
+    const error = new Error(`Rejected frame ${failureIndex}`);
+    let attempt = 0;
+    const { controller, events, writes } = fixture({
+      write: () => (attempt++ === failureIndex ? Promise.reject(error) : Promise.resolve()),
+    });
+    await controller.connect();
+    assert.deepEqual(await controller.sendSequence(frames), { completed: failureIndex, error });
+    assert.deepEqual(writes.map(({ bytes }) => bytes), frames.slice(0, failureIndex + 1));
+    assert.deepEqual(events.filter(({ type }) => type === 'write').at(-1), {
+      type: 'write', bytes: frames[failureIndex], index: failureIndex, total: 2, error,
+    });
+    assert.equal(controller.phase, 'ready');
+  }
+});
+
+test('disconnect during either custom write suppresses late state and stops old frames after reconnect', async () => {
+  const { color, brightness } = customColorFrames('#804020');
+  for (const interruptedIndex of [0, 1]) {
+    const { controller, gatt, events, writes, finish } = pendingWriteFixture();
+    await controller.connect();
+    const pending = controller.sendSequence([color, brightness]);
+    if (interruptedIndex === 1) {
+      finish[0]();
+      await new Promise(setImmediate);
+    }
+
+    gatt.disconnect();
+    assert.equal(events.at(-1).reason, 'lost');
+    await controller.connect();
+    const eventCount = events.length;
+    finish[interruptedIndex]();
+    assert.equal(await pending, undefined);
+    assert.equal(events.length, eventCount);
+    assert.equal(writes.length, interruptedIndex + 1);
+    assert.equal(controller.phase, 'ready');
+  }
 });

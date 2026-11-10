@@ -41,6 +41,24 @@ button:disabled { opacity: .52; cursor: default; }
 .brightness input { width: 100%; height: 2.75rem; margin: 0; accent-color: var(--accent); }
 .brightness output { text-align: right; color: var(--muted); }
 .activity { min-height: 2.75em; margin: .7rem 0 0; font-size: .88rem; }
+.color-fields { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3rem .65rem; }
+.color-fields input { min-width: 0; width: 100%; height: 2.75rem; padding: .4rem .55rem; border: 1px solid var(--edge); border-radius: .45rem; background: #151020; color: inherit; font: inherit; }
+.color-fields input[type="color"] { padding: .22rem; cursor: pointer; }
+#color-hex, #color-target, .favorite-select { font-family: ui-monospace, monospace; }
+#color-hex[aria-invalid="true"] { border-color: #ffafba; }
+.input-error { margin: .35rem 0 0; color: #ffafba; font-size: .88rem; }
+.input-error:empty { margin: 0; }
+.color-preview { display: flex; gap: .75rem; align-items: center; margin: .75rem 0; padding: .55rem; border: 1px solid var(--edge); border-radius: .55rem; }
+.color-preview span { width: 3rem; height: 2.5rem; flex: 0 0 auto; border: 1px solid #d6c9e6; border-radius: .3rem; background: var(--swatch, transparent); }
+.color-preview p, .color-status, .favorites-status { margin: 0; font-size: .88rem; }
+.color-status { margin-top: .55rem; }
+.color-status:empty { margin: 0; }
+.favorites { display: grid; gap: .45rem .6rem; margin: .55rem 0 0; padding: 0; list-style: none; }
+.favorites:empty { margin: 0; }
+.favorites li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .35rem; }
+.favorite-select { display: flex; gap: .45rem; justify-content: center; align-items: center; }
+.favorite-select span { width: .85rem; height: .85rem; flex: 0 0 auto; border: 1px solid #d6c9e6; border-radius: 50%; background: var(--swatch); }
+.favorite-select[aria-pressed="true"] { border-color: var(--accent); background: #463457; }
 summary { cursor: pointer; min-height: 1.7rem; }
 #raw-help, #channel { font-size: .9rem; }
 textarea { display: block; width: 100%; margin: .5rem 0; padding: .55rem; background: #151020; color: inherit; border: 1px solid var(--edge); border-radius: .45rem; resize: vertical; font-size: .95rem; }
@@ -51,4 +69,5 @@ footer { color: var(--muted); font-size: .82rem; text-align: center; }
 
 @media (min-width: 28rem) {
   .palette { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .favorites { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

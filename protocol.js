@@ -18,8 +18,45 @@ export function powerFrame(on) {
 
 export function colorFrame(color) {
   if (!Object.hasOwn(HUES, color)) throw new RangeError('Unknown color');
-  const hue = HUES[color];
-  return Uint8Array.of(0xbc, 0x04, 0x06, hue >> 8, hue & 0xff, 0x03, 0xe8, 0, 0, 0x55);
+  return hsvColorFrame(HUES[color], 1000);
+}
+
+function hsvColorFrame(hue, saturation) {
+  return Uint8Array.of(
+    0xbc, 0x04, 0x06, hue >> 8, hue & 0xff, saturation >> 8, saturation & 0xff, 0, 0, 0x55,
+  );
+}
+
+export function normalizeRgbHex(input) {
+  if (typeof input !== 'string') return null;
+  const hex = input.trim();
+  return /^#[0-9a-f]{6}$/i.test(hex) ? hex.toUpperCase() : null;
+}
+
+export function rgbHexToHsv(input) {
+  const hex = normalizeRgbHex(input);
+  if (hex === null) throw new RangeError('Expected a six-digit #RRGGBB color');
+  const red = Number.parseInt(hex.slice(1, 3), 16);
+  const green = Number.parseInt(hex.slice(3, 5), 16);
+  const blue = Number.parseInt(hex.slice(5, 7), 16);
+  const max = Math.max(red, green, blue);
+  const chroma = max - Math.min(red, green, blue);
+  let sector = 0;
+  if (chroma > 0) {
+    if (max === red) sector = (green - blue) / chroma;
+    else if (max === green) sector = 2 + (blue - red) / chroma;
+    else sector = 4 + (red - green) / chroma;
+  }
+  return {
+    hue: Math.round(360 + sector * 60) % 360,
+    saturation: max === 0 ? 0 : Math.round(chroma * 1000 / max),
+    value: Math.round(max * 1000 / 255),
+  };
+}
+
+export function customColorFrames(input) {
+  const { hue, saturation, value } = rgbHexToHsv(input);
+  return { color: hsvColorFrame(hue, saturation), brightness: brightnessFrame(value), value };
 }
 
 export function brightnessFrame(value) {

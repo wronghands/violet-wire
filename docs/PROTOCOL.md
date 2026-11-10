@@ -4,8 +4,10 @@
 
 - **Kullanıcı gözlemi.** Hedef 5 m RGB pixel neon, USB yalnızca güç veriyor. MR Star ve Elkotrol bu cihazı çalıştırıyor. Kasaya veya firmware'e müdahale bu araştırmanın kapsamı dışında.
 - **Kullanıcı ölçümü.** BLE reklam adı `GATT--DEMO`, GATT servisi `FFF0`, yazma karakteristiği `FFF3` (`WRITE` ve `WRITE_NO_RESPONSE`), bildirim karakteristiği `FFF4` (`NOTIFY`). 16 bit UUID'ler standart Bluetooth tabanına açılır. Örneğin `0000fff0-0000-1000-8000-00805f9b34fb`.
-- **Hedef cihazda doğrulandı.** nRF Connect ile `FFF3` üzerine `BC 04 06 00 00 03 E8 00 00 55` yazılınca şerit kırmızı yandı. Violet Wire üzerinden fiziksel LED doğrulaması kullanıcı testinde yapılacak.
-- **Kaynaklardan çıkarım.** Bilinen kırmızı çerçeve MR Star / Miracles Star biçimiyle eşleşiyor. Aşağıdaki diğer komutlar kaynak temelli adaylar. Aynı reklam adı veya GATT topolojisi tek başına aynı firmware sürümünü belirlemez.
+- **Hedef cihazda doğrulandı.** nRF Connect ile `FFF3` üzerine `BC 04 06 00 00 03 E8 00 00 55` yazılınca şerit kırmızı yandı.
+- **v0.1.0 kullanıcı gözlemi, 10 Kasım 2026.** Android Chrome'da gerçek şeritte bağlantı, hazır renkler ve parlaklık çalıştı. Kullanıcı parlaklık kontrolünü MR Star'dan daha hassas buldu. Tek tek çerçeve veya test sonucu kaydı mevcut değil.
+- **v0.2.0 donanım testi bekliyor.** Özel RGB dönüşümü ve iki çerçevenin art arda uygulanması hedef şeritte henüz sınanmadı.
+- **Kaynaklardan çıkarım.** Bilinen kırmızı çerçeve MR Star / Miracles Star biçimiyle eşleşiyor. Aynı reklam adı veya GATT topolojisi tek başına aynı firmware sürümünü belirlemez.
 - **Bilinmeyen.** `FFF4` bildirimlerinin bu cihazdaki içeriği ve ne zaman geldiği, iki bağımsız sabit bölge desteği ve varsa adresleme biçimi.
 
 ## Taşıma ve çerçeve
@@ -16,7 +18,7 @@ Komut biçimi `BC <opcode> <payload uzunluğu> <payload> 55`. Her çerçeve ayr�
 
 Bağlantı sırasında renk, güç veya başlatma çerçevesi gönderilmez. GlowBridge, eskiden başlatmada kullanılan `06` komutunun animasyon seçtiğini kaydediyor. [GlowBridge protokol belgesi](https://github.com/ronnygeo/GlowBridge/blob/main/docs/PROTOCOL.md)
 
-## İlk sürüm komutları
+## Mevcut komutlar
 
 ### Tek renk
 
@@ -25,11 +27,11 @@ Bağlantı sırasında renk, güç veya başlatma çerçevesi gönderilmez. Glow
 | Renk | Hue | Çerçeve | Hedef cihaz kanıtı |
 | --- | ---: | --- | --- |
 | Kırmızı | 0° | `BC 04 06 00 00 03 E8 00 00 55` | Kullanıcı nRF Connect ile gördü |
-| Yeşil | 120° | `BC 04 06 00 78 03 E8 00 00 55` | Kullanıcı testi bekliyor |
-| Mavi | 240° | `BC 04 06 00 F0 03 E8 00 00 55` | Kullanıcı testi bekliyor |
-| Sarı | 60° | `BC 04 06 00 3C 03 E8 00 00 55` | Kullanıcı testi bekliyor |
-| Magenta | 300° | `BC 04 06 01 2C 03 E8 00 00 55` | Kullanıcı testi bekliyor |
-| Cyan | 180° | `BC 04 06 00 B4 03 E8 00 00 55` | Kullanıcı testi bekliyor |
+| Yeşil | 120° | `BC 04 06 00 78 03 E8 00 00 55` | Hazır renkler için genel v0.1.0 gözlemi |
+| Mavi | 240° | `BC 04 06 00 F0 03 E8 00 00 55` | Hazır renkler için genel v0.1.0 gözlemi |
+| Sarı | 60° | `BC 04 06 00 3C 03 E8 00 00 55` | Hazır renkler için genel v0.1.0 gözlemi |
+| Magenta | 300° | `BC 04 06 01 2C 03 E8 00 00 55` | Hazır renkler için genel v0.1.0 gözlemi |
+| Cyan | 180° | `BC 04 06 00 B4 03 E8 00 00 55` | Hazır renkler için genel v0.1.0 gözlemi |
 
 Bu kontroller altı tanınabilir renk için hazırlanmıştır. Fiziksel LED, optik difüzör ve firmware renk dönüşümü nedeniyle ekran HEX değerleri LED için ölçüm standardı sayılmaz.
 
@@ -41,7 +43,25 @@ Bu kontroller altı tanınabilir renk için hazırlanmıştır. Fiziksel LED, op
 | Kapat | `BC 01 01 00 55` | İki referansın temel güç biçimi |
 | Parlaklık | `BC 05 06 <seviye:u16 BE> 00 00 00 00 55` | İki referans aynı yapıyı kullanıyor |
 
-Hedefte üç işlem de fiziksel test bekliyor. İlk sürüm parlaklıkta GlowBridge'in 0–1000 ölçeğini kullanır. Örneğin %50 için `BC 05 06 01 F4 00 00 00 00 55`. mr-star-ble 0–1024 kullanır. Hedef firmware'in üst uçta nasıl davrandığı bilinmiyor. GlowBridge ayrıca bazı varyantlar için açma `BC 0C 01 01 55` ve kapatma `BC 0F 01 01 55` belgeliyor. Bunlar ilk sürümün güç düğmeleriyle otomatik gönderilmez. Güç düğmesi sonuç vermezse aday biçimi MR Star veya Elkotrol kaydında arayın. [GlowBridge protokol belgesi](https://github.com/ronnygeo/GlowBridge/blob/main/docs/PROTOCOL.md), [mr-star-ble çerçeveleri](https://github.com/mishamyrt/mr-star-ble/blob/main/mr_star_ble/commands.py)
+Kullanıcı v0.1.0 parlaklık kontrolünün çalıştığını bildirdi. Güç için ayrı hedef cihaz sonucu ve parlaklık uçlarına ilişkin ölçüm bulunmuyor. Violet Wire, GlowBridge'in 0–1000 ölçeğini kullanır. Örneğin %50 için `BC 05 06 01 F4 00 00 00 00 55`. mr-star-ble 0–1024 kullanır. GlowBridge bazı varyantlar için açma `BC 0C 01 01 55` ve kapatma `BC 0F 01 01 55` belgeliyor. Violet Wire güç düğmeleri `BC 01` paketini kullanır. Güç düğmesi sonuç vermezse aday biçimi MR Star veya Elkotrol kaydında arayın. [GlowBridge protokol belgesi](https://github.com/ronnygeo/GlowBridge/blob/main/docs/PROTOCOL.md), [mr-star-ble çerçeveleri](https://github.com/mishamyrt/mr-star-ble/blob/main/mr_star_ble/commands.py)
+
+## v0.2.0 özel RGB
+
+Girdi başında `#` ve altı onaltılık basamak içerir. Küçük ve büyük harf kabul edilir. Girdi bir RGB hedefidir. Önizleme bu hedefi gösterir. Fiziksel şerit, renk tonu ve doygunluk kuantizasyonu, firmware dönüşümü, difüzör ve LED özelliklerine bağlı olarak farklı görünebilir.
+
+- **Renk tonu.** En büyük kanal ve kanal farkından standart HSV hesabıyla bulunur. Eşit maksimum kanallar aynı renk sektörü sınırını verir. En yakın dereceye yuvarlanır. Sonuç 360° olursa 0° kullanılır. Örneğin `#FF0001` için renk tonu 0°'ye yuvarlanır.
+- **Doygunluk.** En büyük kanal sıfırdan büyükse `round(1000 × (max − min) / max)`. Siyah, beyaz ve grilerde renk tonu ve doygunluk sıfırdır.
+- **Değer.** `round(1000 × max / 255)`. Bu değer parlaklık paketi olarak gider. Siyah 0, beyaz 1000 ve `#808080` 502 üretir. Siyah bir güç kapatma komutu üretmez. Sıfır parlaklığın fiziksel davranışı testte gözlemlenir.
+
+| RGB hedefi | Renk tonu | Doygunluk | Parlaklık | İlk paket | İkinci paket |
+| --- | ---: | ---: | ---: | --- | --- |
+| `#804020` | 20° | 750 | 502 | `BC 04 06 00 14 02 EE 00 00 55` | `BC 05 06 01 F6 00 00 00 00 55` |
+| `#808080` | 0° | 0 | 502 | `BC 04 06 00 00 00 00 00 00 55` | `BC 05 06 01 F6 00 00 00 00 55` |
+| `#000000` | 0° | 0 | 0 | `BC 04 06 00 00 00 00 00 00 55` | `BC 05 06 00 00 00 00 00 00 55` |
+
+Özel renk için yalnız açık uygulama eylemi iki yazımı başlatır. Tarayıcı `BC 04` renk yazımını tamamlayınca `BC 05` parlaklık paketi ayrı yazılır. İlk yazım hata verirse ikinci yazım başlamaz. Bağlantı kaybında sonraki bekleyen paket atlanır ve yeniden bağlanınca işlem kendiliğinden sürmez. Bir yazım tamamlandıktan sonra diğeri hata verirse fiziksel şerit kısmen değişmiş olabilir. Uygulama geri alma veya otomatik tekrar yapmaz. İki paket arasında kısa bir görsel geçiş olabilir. Parlaklık kaydırıcısı yalnız ikinci yazımın tarayıcıda başarıyla tamamlanmasıyla eşitlenir. Bu, şeridin gerçek parlaklığının ölçümü değildir.
+
+Hazır renkler yalnız renk paketi gönderir. Manuel parlaklık ve tanılama kendi yazımlarını sürdürür. Özel renk girişi ve favori işlemleri BLE yazımı başlatmaz.
 
 ## İki sabit bölge araştırması
 
@@ -54,6 +74,6 @@ Benzer reklam adı ve GATT topolojisi bir başka 3 m Miracles Star cihazında da
 1. Kullanıcının kendi cihazında MR Star ve Elkotrol sürümlerini kaydedin. Varsa manuel bölge veya piksel düzenleme ekranının tam adını ve kontrollerini belirleyin. Önce uygulamanın normal BLE trafiğini inceleyin. Kullanıcının izniyle Android HCI kaydı alınabilir. Hedef dışı Bluetooth verilerini içerebilecek tam kaydı yerelde tutun, repoya yalnız kişisel veriden arındırılmış hedef çerçevelerini ekleyin. [Android Bluetooth kayıt belgeleri](https://source.android.com/docs/core/connect/bluetooth/verifying_debugging)
 2. Boşta, kırmızı, mavi, tek bir parlaklık adımı ve aç/kapat için ayrı kayıtlar alın. GATT keşfinden `FFF3` değer tutamacını belirleyip yalnız hedef bağlantıdaki yazımları karşılaştırın. `FFF4` verisi görülürse zamanıyla birlikte kaydedin.
 3. Manuel bölge kontrolü varsa önce aynı sınırlarla yalnız bir bölgenin rengini, sonra aynı renklerle yalnız sınırı değiştirin. Fiziksel gözlemi çerçevelerdeki farklarla eşleştirin. Sadece efekt seçimi görülürse bunu efekt bulgusu olarak kaydedin. Kontrol bulunamazsa bu, donanımın özelliği hiç desteklemediğini ispatlamaz.
-4. İlk sürümün ham HEX alanı, gözlemlenmiş tek bir kısa çerçevenin kullanıcı tarafından elle yeniden gönderilmesi içindir. Uygulama sınırı 20 bayttır. Bilinen kırmızı çerçeveyle başlayın. Rastgele opcode taraması, otomatik denemeler, ayar veya güncelleme komutları ve firmware müdahalesi kapsam dışında.
+4. Tanılamadaki ham HEX alanı, gözlemlenmiş tek bir kısa çerçevenin kullanıcı tarafından elle yeniden gönderilmesi içindir. Uygulama sınırı 20 bayttır. Bilinen kırmızı çerçeveyle başlayın. Rastgele opcode taraması, otomatik denemeler, ayar veya güncelleme komutları ve firmware müdahalesi kapsam dışında.
 
 **Bölge doğrulama eşiği.** Gerçek şeritte aynı anda iki ayrı sabit renk görünmeli. Bir bölgenin rengi değişirken diğerinin rengi ve sınırı sabit kalmalı. Desen, komut yazımı durduktan sonra en az 30 saniye sabit kalmalı ve aynı dizinin yeniden uygulanması sonucu tekrarlamalı. Video ve ayıklanmış çerçeveler kullanıcı tarafından gözden geçirildikten sonra uygulama kapsamı yeniden değerlendirilebilir.
