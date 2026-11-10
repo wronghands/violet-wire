@@ -41,9 +41,9 @@ These are user observations, not instrumented LED measurements. Two simultaneous
 
 ## Separate hardware test
 
-Open the [pinned two-color test](https://wronghands.github.io/violet-wire-tests/effect-58-v2/lab/) in Android Chrome. It selects the documented red–green effect 58 and applies the lowest published speed. Observe the real strip for at least 30 seconds. Whether the colors hold still on this controller remains unverified. The test has a separate solid-red return button and never sends a length command.
+Open the [pinned speed comparison](https://wronghands.github.io/violet-wire-tests/effect-58-v3/lab/) in Android Chrome. Preset 58 showed red and green simultaneously, but continued moving at speed `0`. Compare `0` and `100` in the same session and record what the real strip does. The [original test](https://wronghands.github.io/violet-wire-tests/effect-58-v2/lab/) remains available. Both tests have a solid-red return button and leave the length setting alone.
 
-The HTTPS snapshot lives in a separate deployment repository, so changes or rollbacks to the stable app do not remove it. See the [research record and physical test steps](docs/STATIONARY_COLORS.md) for exact packets, expected observations, and the passive capture plan.
+The HTTPS snapshots live in a separate deployment repository, so stable-app rollbacks do not remove them. See the [speed comparison and custom-color research](docs/SPEED_CONTRAST.md) for exact packets, physical test steps, and the passive capture plan.
 
 ## Development and QA
 

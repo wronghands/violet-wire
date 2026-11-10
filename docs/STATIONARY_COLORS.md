@@ -1,5 +1,7 @@
 # Two stationary colors on the GATT--DEMO strip
 
+**Hardware result.** Preset 58 displayed red and green simultaneously. Speed `0` still produced about 130–135 movements per minute with an unspecified counting unit. This page records the original test. [Current speed comparison and custom-color research](SPEED_CONTRAST.md) · [Owner report](https://github.com/wronghands/violet-wire/issues/8#issuecomment-6763627326)
+
 ## Evidence as of 10 November 2026
 
 | Status | Observation |
