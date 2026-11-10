@@ -1,36 +1,28 @@
-# Violet Wire | CANONICAL CHECKPOINT
+# Violet Wire | Canonical checkpoint
 
-2026-11-10 · **v0.2.0 inceleme sürümü** · Fiziksel kabul ve yayın onayı bekleniyor.
+10 November 2026 · Issue #8 · Physical effect test pending
 
-## Aktif hedef
+## Active goal and releases
 
-Android Chrome'da 5 m RGB pixel neon şerit için yerel renk seçici, altı haneli `#RRGGBB` girişi ve yerel favorileri kullanıcı incelemesine sun. v0.1.0 bağlantı, güç, hazır renkler, manuel parlaklık ve tanılama davranışı karşılaştırma noktası. Sonraki araştırma hedefi aynı şeritte aynı anda iki bağımsız sabit bölgeye kırmızı ve mavi atamak. Firmware desteği bilinmiyor ve araştırma bu sürümden ayrı.
+Show two different stationary colors simultaneously on one 5 m RGB pixel neon strip. The target is roughly 75 red and 75 blue LEDs. The current experiment uses a fixed red–green preset to test stationarity. Independent addressing remains unverified.
 
-## Esas kaynak ve teslim
+- Canonical source is [wronghands/violet-wire](https://github.com/wronghands/violet-wire). [Issue #8](https://github.com/wronghands/violet-wire/issues/8) owns this investigation.
+- [Normal controls, v0.2.1](https://wronghands.github.io/violet-wire/) are the hardware-verified baseline. The v0.3.0 split experiment was rolled back at [commit `cfb05d8`](https://github.com/wronghands/violet-wire/commit/cfb05d8ec72e47b4fa862582b05f9966e552f8fb).
+- [Pinned HTTPS experiment](https://wronghands.github.io/violet-wire-tests/effect-58-v2/lab/) uses a separate versioned deployment so main releases do not displace the test. [Research and hardware test](STATIONARY_COLORS.md) · [Protocol](PROTOCOL.md) · [QA plan](QA.md)
 
-- [wronghands/violet-wire](https://github.com/wronghands/violet-wire) esas kaynak. v0.2.0 kapsamı [görev #1](https://github.com/wronghands/violet-wire/issues/1). İnceleme dalı ve taslak PR kullanıcı onayına kadar ayrı tutulur.
-- Karşılaştırma sürümü v0.1.0, [commit `baacc5b`](https://github.com/wronghands/violet-wire/commit/baacc5b9d9be494dab6d95bcacce1596f2e9b4aa). `main` ve [GitHub Pages HTTPS](https://wronghands.github.io/violet-wire/) inceleme boyunca v0.1.0 sunar.
-- Statik uygulama, Node testleri ve belgeler bu bağımsız depoda tutulur. Fiziksel kabul için [QA planı](QA.md), dönüşüm, paketler ve bölge araştırması için [protokol](PROTOCOL.md) kullanılır.
+## Hardware and evidence
 
-## Doğrulanmış durum ve belirsizlikler
+- **Owner-reported.** USB supplies power only. MR Star and Elkotrol control the strip. BLE name `GATT--DEMO`, service `FFF0`, characteristic `FFF3` (`WRITE` and `WRITE_NO_RESPONSE`), notifications `FFF4`. The owner counted 146 visible LEDs and estimates another 4–6 beneath tape. Use about 150 physical LEDs. The estimate is 150–152 and the configured firmware count is unknown.
+- **Owner-verified on hardware.** The Android Chrome v0.2.1 baseline works for BLE, custom HEX, favorites, and brightness. The hue picker sometimes needs a second attempt. The full-strip red frame `BC 04 06 00 00 03 E8 00 00 55` worked in nRF Connect. Separate case-by-case results for power, reconnection, raw HEX and notifications were not recorded.
+- **Owner-verified on hardware.** In the withdrawn `SET_LENGTH=75` experiment, the first roughly half showed the requested color and the rest went dark. The exact packet sequence and timing are unknown. The prior-color tail retention hypothesis failed in that run. Built-in presets demonstrate multicolor rendering. Independent zone addressing and the mechanism that darkened the tail remain unknown.
+- **Source-backed protocol.** Commands use `BC <opcode> <payload length> <payload> 55`. Global color uses `BC 04 06 <hue:u16 BE> <sat:u16 BE> 00 00 55` and brightness uses `BC 05 06 <level:u16 BE> 00 00 00 00 55`, 0–1000 in Violet Wire. Upstream length `BC 03 02 <count:u16 BE> 55` carries a total count without a start address.
+- **Unknown.** Target firmware revision, stored LED count, meaning of `FFF4` notifications, speed-zero behavior, and whether any external pixel or independent zone command exists.
 
-- **KULLANICI BİLGİSİ.** USB sadece güç. Kasa kapalı kalacak. MR Star ve Elkotrol şeridi kontrol edebiliyor. BLE reklam adı `GATT--DEMO`, servis `FFF0`, yazma `FFF3` (`WRITE`/`WRITE_NO_RESPONSE`), bildirim `FFF4`.
-- **KULLANICI DONANIM TESTİ.** nRF Connect ile `BC 04 06 00 00 03 E8 00 00 55` yazımı fiziksel şeridi kırmızı yaptı. 10 Kasım 2026'da kullanıcı Android Chrome'daki v0.1.0 ile bağlantının, hazır renklerin ve parlaklığın gerçek şeritte çalıştığını bildirdi. Kullanıcı parlaklık kontrolünü MR Star'dan daha hassas buldu. Bu bir genel kabul raporu. Güç, tek tek renkler, kesinti, ham HEX ve FFF4 için ayrı fiziksel test kaydı yok.
-- **KAYNAK.** GlowBridge ve mr-star-ble aynı derece cinsinden renk tonu ve 1000 birimlik doygunluk biçimini, `BC 01` güç paketini ve `BC 05` parlaklık paketini kullanır. Parlaklık ölçekleri 0–1000 ve 0–1024 olarak farklıdır. Violet Wire 0–1000 kullanır.
-- **BİLİNMİYOR.** v0.2.0 özel renk uygulamasının ve iki yazımın fiziksel davranışı. FFF4 bildirimlerinin anlamı, firmware sürümü ve sabit bölge veya piksel adresleme desteği. İncelenen kaynaklarda böyle bir komut bulunmadı.
+## Exact test and next step
 
-## v0.2.0 uygulama kararları
+1. Open the pinned test in Android Chrome and connect to `GATT--DEMO`. Trigger the test once. It writes `BC 06 02 00 3A 55` (published red–green running water, effect 58), then `BC 08 01 00 55` (published minimum speed), as two separate writes. A speed of zero may still move or behave differently on this firmware. No length write is part of the test.
+2. Observe the entire strip for at least 30 seconds with no further writes. Record whether different colors are visible at the same time and whether their boundaries move. A moving pattern, single color, or colored prefix with a dark tail fails the stationary test. A stationary preset verifies only that preset. Independent control requires changing one region while the other stays fixed.
+3. Restore solid red with `BC 04 06 00 00 03 E8 00 00 55`. This writes a known color and does not restore the previous animation speed or settings. The browser write log and physical behavior are separate evidence.
+4. If the effect fails or is inconclusive, capture a short passive Android HCI trace of the owner's installed MR Star or Elkotrol on this strip. Record app package/version, connect, two-color preset selection, minimum speed, 30 seconds idle, then solid red. Map the actual `FFF3` value handle and compare the writes. Keep the full trace local and retain only redacted target rows and observations.
 
-- Chrome cihaz seçicisi `GATT--DEMO` reklam adını kullanır. `FFF3` yazma yöntemi desteğe göre seçilir. FFF4 bildirimleri tanılama içindir. Erişim isteği Bluetooth ile sınırlı.
-- Özel RGB girişi başında `#` olan altı onaltılık basamak. Seçici, metin alanı ve önizleme birlikte çalışır. Önizleme istenen RGB'yi gösterir. Optik doğruluk kabul koşulu değildir.
-- HSV renk tonu en yakın dereceye yuvarlanır, 360° sonucu 0° olur. Doygunluk ve değer 0–1000 ölçeğine yuvarlanır. Değer, `round(1000 × max(R,G,B) / 255)` olarak parlaklığı belirler. Gri, beyaz ve siyahın renk tonu ve doygunluğu sıfır. Siyahın parlaklığı sıfır ve güç paketi yok.
-- Açık uygulama eylemi önce `BC 04 06 <hue:u16 BE> <sat:u16 BE> 00 00 55`, ardından `BC 05 06 <level:u16 BE> 00 00 00 00 55` gönderir. Örneğin `#804020` için H20/S750/V502. Parlaklık kaydırıcısı yalnız ikinci tarayıcı yazımı tamamlanınca eşitlenir. Fiziksel tepki ayrıca kontrol edilir.
-- Yazımlar seri, bir oturuma bağlı ve aralarında başka kontrol komutu kabul edilmez. İlk hata sonraki yazımı durdurur. Kesintiden sonra eski işlem yeniden bağlanmada sürmez. Tamamlanan yazımın fiziksel etkisi kalabilir.
-- Favoriler aynı tarayıcıda ve aynı kaynakta yerel renk örnekleri olarak saklanır. Renk girişi, seçim, favori seçme ve yeniden bağlanma gönderim yapmaz. Ham HEX tanılaması ayrı, onaylı tek bir `BC … 55` çerçevesi ve en çok 20 bayt.
-
-## Aşamalar ve geçiş koşulları
-
-1. **v0.2.0 inceleme.** Özellik dalında Node testleri ve dar ekran kontrolü. Taslak PR kullanıcı incelemesine açılır. Test sonucu, commit ve fiziksel kabul durumu ayrı kaydedilir.
-2. **Kullanıcı QA ve yayın onayı.** Taslak PR commit'inden sunulan güvenilir HTTPS sayfasında Android Chrome ile çalıştır. Kırmızı referansı, yeni renk/HSV değeri, favoriler, mevcut kontroller ve yeniden bağlanmayı QA planına göre kaydet. Birleştirme ve yayın için açık onay bekle.
-3. **Ayrı, salt okunur bölge araştırması.** Yeni kaynak veya gerçek cihaz verisi bulunursa kaynağını ve hipotezi belgele. Kullanıcı onayıyla MR Star ve Elkotrol'ün olağan BLE yazımlarını pasif olarak karşılaştır. Aday komut, beklenen davranış ve geri dönüş anlaşılırsa tek deney için ayrıca onay al. Rastgele opcode taraması, otomatik deneme, kasa açma, kontrolcü değiştirme, Wi-Fi ve firmware/OTA işlemleri kapsam dışı.
-4. **Bölge kanıtı.** Gerçek şeritte kırmızı ve mavi eşzamanlı, uzamsal olarak ayrı ve sabit olmalı. Bir bölge değişirken diğer bölge sabit kalmalı. Efekt, ardışık global renk ve simülasyon bölge desteğini kanıtlamaz.
+No blind opcode testing, repeated length-tail experiment, hardware changes, controller opening, or firmware flashing.

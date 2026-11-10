@@ -39,6 +39,12 @@ These are user observations, not instrumented LED measurements. Two simultaneous
 
 **Active research and Work implementation brief:** [Issue #8](https://github.com/wronghands/violet-wire/issues/8). Do not reintroduce the rejected v0.3.0 interface or present the unproven `SET_LENGTH` approach as a working two-color mode.
 
+## Separate hardware test
+
+Open the [pinned two-color test](https://wronghands.github.io/violet-wire-tests/effect-58-v2/lab/) in Android Chrome. It selects the documented red–green effect 58 and applies the lowest published speed. Observe the real strip for at least 30 seconds. Whether the colors hold still on this controller remains unverified. The test has a separate solid-red return button and never sends a length command.
+
+The HTTPS snapshot lives in a separate deployment repository, so changes or rollbacks to the stable app do not remove it. See the [research record and physical test steps](docs/STATIONARY_COLORS.md) for exact packets, expected observations, and the passive capture plan.
+
 ## Development and QA
 
 The GitHub repository is the canonical source. GitHub Pages serves static files from the `main` branch; there is no backend, compilation step, or runtime CDN dependency.
