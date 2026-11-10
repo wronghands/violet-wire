@@ -1,5 +1,6 @@
 import { VioletBluetooth } from './ble.js';
 import { hsvToRgbHex } from './color-editor.js';
+import { lengthFrame, splitPlan, validateSplit, localCountStorage } from './split-experiment.js';
 import { createFavorites, MAX_FAVORITES } from './favorites.js';
 import { brightnessFrame, colorFrame, customColorFrames, formatHex, normalizeRgbHex, parseRawFrame, powerFrame, rgbHexToHsv } from './protocol.js';
 
@@ -30,6 +31,19 @@ const raw = byId('raw');
 const preview = byId('raw-preview');
 const sendRaw = byId('send-raw');
 const log = byId('log');
+const originalCountInput = byId('original-count');
+const splitCountInput = byId('split-count');
+const countConfirmed = byId('count-confirmed');
+const storeCount = byId('store-count');
+const restoreCount = byId('restore-count');
+const prefixColor = byId('prefix-color');
+const tailColor = byId('tail-color');
+const trySplit = byId('try-split');
+const tryReversed = byId('try-reversed');
+const probeLength = byId('probe-length');
+const restoreFull = byId('restore-full');
+const labStatus = byId('lab-status');
+const labCommands = byId('lab-commands');
 const defaultChannel = channel.textContent;
 const defaultActivity = activity.textContent;
 const supported = window.isSecureContext && Boolean(navigator.bluetooth);
@@ -42,6 +56,8 @@ let editorHue = 270;
 let editorSaturation = 750;
 let editorValue = 920;
 let activePointerId = null;
+const originalStorage = localCountStorage(() => window.localStorage);
+let verifiedOriginal = originalStorage.load();
 
 function connectionError(error, stage) {
   if (stage === 'chooser') {
@@ -163,6 +179,47 @@ function renderFavorites() {
   updateColorButtons();
 }
 
+function readLabConfig() {
+  if (verifiedOriginal === null || !countConfirmed.checked) return null;
+  if (Number(originalCountInput.value) !== verifiedOriginal) return null;
+  try {
+    const split = validateSplit(verifiedOriginal, Number(splitCountInput.value));
+    const prefix = normalizeRgbHex(prefixColor.value);
+    const tail = normalizeRgbHex(tailColor.value);
+    if (!prefix || !tail) return null;
+    return { original: verifiedOriginal, split, prefix, tail };
+  } catch {
+    return null;
+  }
+}
+
+function refreshLab() {
+  const config = readLabConfig();
+  const ready = bluetooth.phase === 'ready';
+  restoreCount.disabled = !ready || verifiedOriginal === null;
+  restoreFull.disabled = !ready || verifiedOriginal === null;
+  trySplit.disabled = !ready || !config;
+  tryReversed.disabled = !ready || !config;
+  probeLength.disabled = !ready || !config;
+  labCommands.textContent = config
+    ? `Sıra: ${formatHex(customColorFrames(config.tail).color)} → ${formatHex(lengthFrame(config.split))} → ${formatHex(customColorFrames(config.prefix).color)}. Geri yükleme: ${formatHex(lengthFrame(config.original))}`
+    : 'Orijinal değeri kaydet ve doğrula; test sınırı daha küçük olmalı. Renkler geçerli #RRGGBB olmalı.';
+}
+
+async function sendLabPlan(label, frames) {
+  if (bluetooth.phase !== 'ready') return;
+  labStatus.textContent = `${label}: ${frames.length} çerçeve gönderiliyor…`;
+  const result = await bluetooth.sendSequence(frames);
+  if (!result) {
+    labStatus.textContent = 'Bağlantı kesildi veya işlem tamamlanamadı. Orijinal PIXELS sayısını geri yüklemeyi kontrol et.';
+  } else if (result.error) {
+    labStatus.textContent = `${label}: ${result.completed}/${frames.length} yazım tamamlandı. Geri yüklemeden önce bağlantıyı kontrol et.`;
+  } else {
+    labStatus.textContent = `${label}: tarayıcı ${result.completed} çerçeveyi gönderdi. LED'de iki sabit renk var mı? 30 saniye gözle, sonra orijinal PIXELS sayısını geri yükle. Bu sonuç donanımda henüz kanıtlanmadı.`;
+  }
+  refreshLab();
+}
+
 function showEvent(event) {
   if (event.type === 'notify') {
     addLog(`FFF4 bildirim · ${formatHex(event.bytes)}`);
@@ -193,6 +250,7 @@ function showEvent(event) {
   commands.disabled = phase !== 'ready';
   updateRaw();
   updateColorButtons();
+  refreshLab();
 
   if (phase === 'idle') {
     colorStatus.textContent = pendingColor ? `${pendingColor.hex} işlemi bağlantı kesilince durdu. Şeridin durumunu kontrol et.` : '';
@@ -298,3 +356,51 @@ sendRaw.addEventListener('click', () => {
   const bytes = parseRawFrame(raw.value);
   if (window.confirm(`Bu deneysel çerçeve bir kez gönderilecek.\n\n${formatHex(bytes)}\n\nGöndermek istiyor musun?`)) bluetooth.send(bytes);
 });
+
+function invalidateLabVerification() {
+  countConfirmed.checked = false;
+  refreshLab();
+}
+originalCountInput.addEventListener('input', invalidateLabVerification);
+splitCountInput.addEventListener('input', refreshLab);
+prefixColor.addEventListener('input', refreshLab);
+tailColor.addEventListener('input', refreshLab);
+countConfirmed.addEventListener('change', refreshLab);
+storeCount.addEventListener('click', () => {
+  const count = Number(originalCountInput.value);
+  if (!countConfirmed.checked || !Number.isInteger(count) || count < 9 || count > 300) {
+    labStatus.textContent = 'MR Star’da görülen gerçek orijinal PIXELS sayısını (9–300) girip doğrulamalısın.';
+    return;
+  }
+  try {
+    originalStorage.save(count);
+    verifiedOriginal = count;
+    if (!splitCountInput.value) splitCountInput.value = String(Math.floor(count / 2));
+    labStatus.textContent = `Orijinal ${count} piksel yerelde kaydedildi; bağlantı koparsa da aynı tarayıcıdan geri yüklenebilir.`;
+  } catch {
+    verifiedOriginal = count;
+    labStatus.textContent = `Orijinal ${count} piksel yalnız bu oturumda hatırlandı; tarayıcı depolama izni yok.`;
+  }
+  refreshLab();
+});
+async function restoreLab({ recolor = false } = {}) {
+  if (verifiedOriginal === null) return;
+  const frames = recolor ? [lengthFrame(verifiedOriginal), colorFrame('blue')] : [lengthFrame(verifiedOriginal)];
+  await sendLabPlan(recolor ? 'Tam şerit restore + mavi' : 'Orijinal uzunluk restore', frames);
+}
+restoreCount.addEventListener('click', () => restoreLab());
+restoreFull.addEventListener('click', () => restoreLab({ recolor: true }));
+for (const [button, order] of [[trySplit, 'normal'], [tryReversed, 'reversed'], [probeLength, 'probe']]) {
+  button.addEventListener('click', () => {
+    const config = readLabConfig();
+    if (!config) return;
+    const plan = splitPlan(config, order);
+    sendLabPlan(plan.label, plan.frames);
+  });
+}
+if (verifiedOriginal !== null) {
+  originalCountInput.value = String(verifiedOriginal);
+  labStatus.textContent = `Kaydedilmiş orijinal sayı: ${verifiedOriginal}. MR Star'daki PIXELS değerini yeniden doğrulayıp kutuyu işaretle.`;
+  splitCountInput.value = String(Math.floor(verifiedOriginal / 2));
+}
+refreshLab();
