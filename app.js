@@ -1,4 +1,5 @@
 import { VioletBluetooth } from './ble.js';
+import { hsvToRgbHex } from './color-editor.js';
 import { createFavorites, MAX_FAVORITES } from './favorites.js';
 import { brightnessFrame, colorFrame, customColorFrames, formatHex, normalizeRgbHex, parseRawFrame, powerFrame, rgbHexToHsv } from './protocol.js';
 
@@ -11,7 +12,10 @@ const channel = byId('channel');
 const commands = byId('commands');
 const brightness = byId('brightness');
 const brightnessValue = byId('brightness-value');
-const colorPicker = byId('color-picker');
+const svSurface = byId('sv-surface');
+const hueSlider = byId('hue-slider');
+const saturationSlider = byId('saturation-slider');
+const valueSlider = byId('value-slider');
 const colorHex = byId('color-hex');
 const colorError = byId('color-error');
 const colorSwatch = byId('color-swatch');
@@ -34,6 +38,10 @@ const favorites = createFavorites(() => window.localStorage);
 const percent = new Intl.NumberFormat('tr-TR', { style: 'percent', maximumFractionDigits: 1 });
 let customDraft = null;
 let pendingColor = null;
+let editorHue = 270;
+let editorSaturation = 750;
+let editorValue = 920;
+let activePointerId = null;
 
 function connectionError(error, stage) {
   if (stage === 'chooser') {
@@ -66,12 +74,31 @@ function updateColorButtons() {
   addFavorite.disabled = !customDraft || favorites.has(customDraft) || favorites.colors.length >= MAX_FAVORITES;
 }
 
-function updateCustomDraft() {
+function renderColorEditor() {
+  hueSlider.value = String(editorHue);
+  saturationSlider.value = String(editorSaturation);
+  valueSlider.value = String(editorValue);
+  const hueText = `${editorHue}°`;
+  hueSlider.setAttribute('aria-valuetext', hueText);
+  saturationSlider.setAttribute('aria-valuetext', `${(editorSaturation / 10).toFixed(1)}%`);
+  valueSlider.setAttribute('aria-valuetext', `${(editorValue / 10).toFixed(1)}%`);
+  svSurface.style.setProperty('--editor-hue', `${editorHue}deg`);
+  svSurface.style.setProperty('--sat', `${editorSaturation / 10}%`);
+  svSurface.style.setProperty('--val-top', `${100 - editorValue / 10}%`);
+}
+
+function updateCustomDraft(syncEditor = true) {
   customDraft = normalizeRgbHex(colorHex.value);
   colorHex.setAttribute('aria-invalid', String(!customDraft));
   colorError.textContent = customDraft ? '' : '# işaretini ve ardından altı HEX karakteri gir. Örnek #7C3AED.';
   if (customDraft) {
-    colorPicker.value = customDraft.toLowerCase();
+    if (syncEditor === true || (syncEditor && typeof syncEditor === 'object')) {
+      const hsv = rgbHexToHsv(customDraft);
+      if (hsv.saturation > 0 && hsv.value > 0) editorHue = hsv.hue;
+      editorSaturation = hsv.saturation;
+      editorValue = hsv.value;
+    }
+    renderColorEditor();
     colorSwatch.style.setProperty('--swatch', customDraft);
     colorTarget.textContent = customDraft;
     colorLevel.textContent = `Hedef parlaklık ${percent.format(rgbHexToHsv(customDraft).value / 1000)}`;
@@ -86,9 +113,23 @@ function updateCustomDraft() {
   }
 }
 
-function stageColor(color) {
+function stageColor(color, fromEditor = false) {
   colorHex.value = color.toUpperCase();
-  updateCustomDraft();
+  updateCustomDraft(!fromEditor);
+}
+
+function stageEditorColor() {
+  stageColor(hsvToRgbHex(editorHue, editorSaturation, editorValue), true);
+}
+
+function setColorFromSurface(event) {
+  const rect = svSurface.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+  editorSaturation = Math.round(x * 1000);
+  editorValue = Math.round((1 - y) * 1000);
+  stageEditorColor();
 }
 
 function renderFavorites() {
@@ -205,9 +246,34 @@ colorHex.addEventListener('input', updateCustomDraft);
 colorHex.addEventListener('blur', () => {
   if (customDraft) colorHex.value = customDraft;
 });
-for (const eventName of ['input', 'change']) {
-  colorPicker.addEventListener(eventName, () => stageColor(colorPicker.value));
+hueSlider.addEventListener('input', () => {
+  editorHue = Number(hueSlider.value);
+  stageEditorColor();
+});
+saturationSlider.addEventListener('input', () => {
+  editorSaturation = Number(saturationSlider.value);
+  stageEditorColor();
+});
+valueSlider.addEventListener('input', () => {
+  editorValue = Number(valueSlider.value);
+  stageEditorColor();
+});
+svSurface.addEventListener('pointerdown', (event) => {
+  if (activePointerId !== null) return;
+  activePointerId = event.pointerId;
+  svSurface.setPointerCapture(event.pointerId);
+  setColorFromSurface(event);
+});
+svSurface.addEventListener('pointermove', (event) => {
+  if (event.pointerId === activePointerId) setColorFromSurface(event);
+});
+function finishSurfacePointer(event) {
+  if (event.pointerId !== activePointerId) return;
+  activePointerId = null;
+  if (svSurface.hasPointerCapture(event.pointerId)) svSurface.releasePointerCapture(event.pointerId);
 }
+svSurface.addEventListener('pointerup', finishSurfacePointer);
+svSurface.addEventListener('pointercancel', finishSurfacePointer);
 applyColor.addEventListener('click', () => {
   if (!customDraft || bluetooth.phase !== 'ready') return;
   const { color, brightness: levelFrame, value } = customColorFrames(customDraft);

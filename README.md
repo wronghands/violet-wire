@@ -24,3 +24,7 @@ Uygulama konum, mikrofon veya müzik API’lerini çağırmaz. Android ve Chrome
 Bu GitHub reposu uygulamanın ve belgelerin esas kaynağıdır. GitHub Pages `main` dalının kökünden statik dosyaları yayımlar. v0.2.0 değişiklikleri taslak PR'da incelenir ve `main` için kullanıcı onayı beklenir. Uygulama derleme ve harici çalışma zamanı bağımlılığı gerektirmez.
 
 Node.js ile `npm test` komutunu çalıştır. Testler renk dönüşümünü, paketleri, yerel favorileri ve taklit GATT davranışını kontrol eder. Android ve fiziksel neon sonuçları ayrı kaydedilir. [Protokol ve kanıt düzeyleri](docs/PROTOCOL.md) · [Aşamalar ve devir noktası](docs/CHECKPOINT.md)
+
+## v0.2.1 — doğrudan renk seçici
+
+Android Chrome'un sekiz hazır renkli yerel seçim ekranı yerine **sayfa içinde HSV editörü** kullanılır: büyük doygunluk/ışıklılık alanına dokun ve sürükle; renk tonu kaydırıcısını kullan. Klavye ve erişilebilirlik için doygunluk/ışıklılık kaydırıcıları da bulunur. HEX, favoriler ve önizleme eşzamanlıdır. BLE komutları yalnızca **Rengi uygula** ile gönderilir. v0.2.0 gerçek LED üzerinde kullanıcı tarafından doğrulanmıştır; v0.2.1 editörünün mobil saha testi ayrıca gereklidir.

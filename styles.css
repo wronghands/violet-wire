@@ -41,9 +41,20 @@ button:disabled { opacity: .52; cursor: default; }
 .brightness input { width: 100%; height: 2.75rem; margin: 0; accent-color: var(--accent); }
 .brightness output { text-align: right; color: var(--muted); }
 .activity { min-height: 2.75em; margin: .7rem 0 0; font-size: .88rem; }
-.color-fields { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3rem .65rem; }
-.color-fields input { min-width: 0; width: 100%; height: 2.75rem; padding: .4rem .55rem; border: 1px solid var(--edge); border-radius: .45rem; background: #151020; color: inherit; font: inherit; }
-.color-fields input[type="color"] { padding: .22rem; cursor: pointer; }
+/* Inline editor avoids Android Chrome's native eight-swatch intermediate chooser. */
+.color-editor { display: grid; gap: .35rem; margin: .75rem 0; }
+.color-editor h3 { margin: 0; }
+.color-editor p { margin: 0 0 .2rem; font-size: .88rem; }
+.sv-surface { position: relative; width: 100%; height: 12rem; border: 1px solid var(--edge); border-radius: .6rem; touch-action: none; user-select: none; cursor: crosshair;
+  background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), hsl(var(--editor-hue, 270deg) 100% 50%);
+}
+.sv-marker { position: absolute; left: var(--sat, 75%); top: var(--val-top, 8%); width: 1.1rem; height: 1.1rem; transform: translate(-50%, -50%); border: 2px solid white; border-radius: 50%; box-shadow: 0 0 0 1px #292034, 0 1px 5px #0009; pointer-events: none; }
+.color-editor input[type="range"] { min-width: 0; width: 100%; height: 2.5rem; margin: 0; accent-color: #c18ef6; }
+#hue-slider { appearance: none; -webkit-appearance: none; height: .95rem; margin: .65rem 0; border: 1px solid #c5adc9; border-radius: 1rem; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); }
+#hue-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 1.4rem; height: 1.4rem; border: 2px solid white; border-radius: 50%; background: #24172f; box-shadow: 0 1px 5px #000a; }
+.editor-fine-tune { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .2rem .6rem; }
+.hex-label { display: block; margin-top: .5rem; }
+#color-hex { min-width: 0; width: 100%; height: 2.75rem; padding: .4rem .55rem; border: 1px solid var(--edge); border-radius: .45rem; background: #151020; color: inherit; font: inherit; }
 #color-hex, #color-target, .favorite-select { font-family: ui-monospace, monospace; }
 #color-hex[aria-invalid="true"] { border-color: #ffafba; }
 .input-error { margin: .35rem 0 0; color: #ffafba; font-size: .88rem; }

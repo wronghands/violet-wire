@@ -55,3 +55,10 @@ Favori ekleme, yenileme, seçme ve kaldırma =
 Güç / manuel parlaklık / ham HEX / yeniden bağlanma =
 Gözlenen hatalar ve kullanıcı onayı =
 ```
+
+## v0.2.1 renk seçici regresyonu
+
+- Android Chrome'da "Özel renk" bölümünde HSV alanı doğrudan görünmeli. Sekiz renkli Android/Chrome 'Select color' ekranı **hiç açılmamalı**.
+- Doygunluk/ışıklılık alanına dokunmak ve sürüklemek HEX+önizlemeyi anında değiştirmeli; yalnız sürükleme LED'e **komut göndermemeli**.
+- Ton kaydırıcısı ve erişilebilir doygunluk/ışıklılık kaydırıcıları HEX'i değiştirmeli. HEX metni ve favori seçimi HSV işaretini güncellemeli.
+- Sadece 'Rengi uygula' düğmesi BLE rengini/parlaklığı göndermeli. Altı hazır renk, güç, parlaklık, bağlantı, favoriler ve ham HEX regresyon testleri geçmeli.
