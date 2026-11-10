@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#141021">
+  <meta name="description" content="GATT--DEMO LED kontrolcüsü için Violet Wire Bluetooth test arayüzü.">
+  <title>Violet Wire</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <span class="badge">v0.1.0 · Cihaz testi</span>
+      <h1>Violet Wire</h1>
+      <p>Android Chrome için Bluetooth LED kontrolü</p>
+    </header>
+
+    <section class="card" aria-labelledby="connection-title">
+      <div class="heading-row">
+        <h2 id="connection-title">Bağlantı</h2>
+        <code>GATT--DEMO</code>
+      </div>
+      <p id="connection" role="status">Bluetooth desteği kontrol ediliyor…</p>
+      <div class="button-row">
+        <button class="accent" id="connect" type="button" disabled>Bağlan</button>
+        <button id="disconnect" type="button" disabled>Bağlantıyı kes</button>
+      </div>
+      <noscript><p>Bu test arayüzü JavaScript gerektirir.</p></noscript>
+    </section>
+
+    <section class="card" aria-labelledby="controls-title">
+      <h2 id="controls-title">LED kontrolleri</h2>
+      <fieldset id="commands" disabled>
+        <legend>Güç</legend>
+        <div class="button-row">
+          <button type="button" data-power="on">Aç</button>
+          <button type="button" data-power="off">Kapat</button>
+        </div>
+        <h3 id="colors-title">Sabit renk</h3>
+        <div class="palette" role="group" aria-labelledby="colors-title">
+          <button type="button" data-color="red"><span aria-hidden="true"></span>Kırmızı</button>
+          <button type="button" data-color="green"><span aria-hidden="true"></span>Yeşil</button>
+          <button type="button" data-color="blue"><span aria-hidden="true"></span>Mavi</button>
+          <button type="button" data-color="yellow"><span aria-hidden="true"></span>Sarı</button>
+          <button type="button" data-color="magenta"><span aria-hidden="true"></span>Macenta</button>
+          <button type="button" data-color="cyan"><span aria-hidden="true"></span>Cyan</button>
+        </div>
+        <div class="brightness">
+          <label for="brightness">Parlaklık</label>
+          <output id="brightness-value" for="brightness">50%</output>
+          <input id="brightness" type="range" min="0" max="1000" step="10" value="500" aria-valuetext="Yüzde 50">
+          <button id="apply-brightness" type="button">Uygula</button>
+        </div>
+      </fieldset>
+      <p class="activity" id="activity" role="status">LED tepkisini gözle kontrol et. Burada tarayıcının yazma sonucu görünür.</p>
+    </section>
+
+    <details class="card" id="diagnostics">
+      <summary>Tanılama</summary>
+      <p id="channel">Yazma ve bildirim kanalları bağlantı sırasında kontrol edilir.</p>
+      <label for="raw">Deneysel HEX gönderimi</label>
+      <p id="raw-help">Yalnızca inceleyip tekrar göndermek istediğin tek bir <code>BC … 55</code> çerçevesi gir. En fazla 20 bayt.</p>
+      <textarea id="raw" rows="2" maxlength="100" spellcheck="false" autocapitalize="characters" autocomplete="off" aria-describedby="raw-help raw-preview" placeholder="BC 04 06 00 00 03 E8 00 00 55"></textarea>
+      <p id="raw-preview"></p>
+      <button id="send-raw" type="button" disabled>HEX’i onayla ve gönder</button>
+      <h3>Oturum kaydı</h3>
+      <ol id="log"></ol>
+    </details>
+
+    <footer>Sabit bölge desteği araştırılıyor.</footer>
+  </main>
+</body>
+</html>
