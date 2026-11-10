@@ -13,7 +13,7 @@
 <body>
   <main>
     <header class="intro">
-      <span class="badge">v0.2.0 · Cihaz testi</span>
+      <span class="badge">v0.2.1 · Cihaz testi</span>
       <h1>Violet Wire</h1>
       <p>Android Chrome için Bluetooth LED kontrolü</p>
     </header>
@@ -61,12 +61,23 @@
     <section class="card" aria-labelledby="custom-title">
       <h2 id="custom-title">Özel renk</h2>
       <p id="color-help"><code>#RRGGBB</code> hedef RGB değeridir. Şeridin ürettiği renk ve parlaklık farklı görünebilir.</p>
-      <div class="color-fields">
-        <label for="color-picker">Renk seçici</label>
-        <label for="color-hex">HEX değeri</label>
-        <input id="color-picker" type="color" value="#7c3aed">
-        <input id="color-hex" type="text" value="#7C3AED" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="color-help color-error">
+      <div class="color-editor" role="group" aria-labelledby="color-editor-title">
+        <h3 id="color-editor-title">Renk seçici</h3>
+        <p>Alana dokunup sürükleyerek doğrudan renk seç.</p>
+        <div class="sv-surface" id="sv-surface" aria-hidden="true">
+          <span class="sv-marker" id="sv-marker"></span>
+        </div>
+        <label for="hue-slider">Renk tonu</label>
+        <input id="hue-slider" type="range" min="0" max="359" step="1" value="270">
+        <div class="editor-fine-tune">
+          <label for="saturation-slider">Doygunluk</label>
+          <input id="saturation-slider" type="range" min="0" max="1000" step="1" value="750">
+          <label for="value-slider">Işıklılık</label>
+          <input id="value-slider" type="range" min="0" max="1000" step="1" value="920">
+        </div>
       </div>
+      <label class="hex-label" for="color-hex">HEX değeri</label>
+      <input id="color-hex" type="text" value="#7C3AED" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="color-help color-error">
       <p class="input-error" id="color-error" aria-live="polite"></p>
       <div class="color-preview">
         <span id="color-swatch" aria-hidden="true"></span>
